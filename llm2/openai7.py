@@ -1,3 +1,5 @@
+import urllib
+
 from myllm.myApi import geminiModel, openAiModel, openAiModelArg, makeMsg
 
 
@@ -12,6 +14,8 @@ def test(prompt):
     for n, data in enumerate(response.data):
         print(n)
         print(data.url)
+        name = f"dogncat_clone_{n}.png"
+        urllib.request.urlretrieve(data.url, name)
 
 if __name__ == "__main__":
     prompt = "img/amd.jpg"
