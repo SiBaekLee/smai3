@@ -27,7 +27,7 @@ if st.button("SEND"):
         my_bar = progressBar("Loading....")
         result = agent.run(text)
         st.info(result)
-        makeAudio(text,"result.mp3")
+        makeAudio(result,"result.mp3")
         st.audio("audio/result.mp3", autoplay=True)
         my_bar.empty()
     else:
