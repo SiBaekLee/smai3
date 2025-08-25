@@ -10,10 +10,30 @@ from openai import OpenAI
 
 load_dotenv()
 
-GOOGLE_API_KEY=os.getenv("GOOGLE_API_KEY")
-OPENAI_API_KEY=os.getenv("OPENAI_API_KEY")
-
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 #GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
+
+def openAiModel():
+    client = OpenAI(api_key=OPENAI_API_KEY)
+    return client
+
+def makeMsg(system,user ):
+    messages = [
+        {"role": "system", "content": system},
+        {"role": "user", "content": user},
+    ]
+    return messages
+
+def openAiModelArg(model, msgs):
+    print(model)
+    print(msgs)
+    client = OpenAI(api_key=OPENAI_API_KEY)
+    response = client.chat.completions.create(
+        model=model,
+        messages=msgs
+    )
+    return response.choices[0].message.content
 
 
 def geminiModel():
@@ -58,40 +78,18 @@ def progressBar(txt):
     return my_bar
     # Progress Bar End -----------------------------------------
 
-def openAiModel():
-    client = OpenAI(api_key=OPENAI_API_KEY)
-    return client
-
-def makeMsg(system,user ):
-    messages = [
-        {"role": "system", "content": system},
-        {"role": "user", "content": user},
-    ]
-    return messages
-
-def openAiModelArg(model, msgs):
-    print(model)
-    print(msgs)
-    client = OpenAI(api_key=OPENAI_API_KEY)
-    response = client.chat.completions.create(
-        model=model,
-        messages=msgs
-    )
-    return response.choices[0].message.content
-
 def makeAudio(text, name):
     if not os.path.exists("audio"):
         os.makedirs("audio")
     model = openAiModel()
-
     response = model.audio.speech.create(
         model="tts-1",
         input=text,
+        #["alloy", "echo", "fable", "onyx", "nova", "shimmer"],
         voice="alloy",
         response_format="mp3",
         speed=1.1,
     )
-
     response.stream_to_file("audio/"+name)
 
 
@@ -111,4 +109,32 @@ def makeImage(prompt, name):
     image_url = response.data[0].url
     print(image_url)
     imgName = "img/"+name
-    urllib.request.urlretrieve(image_url, imgName)
+    urllib.request.urlretrieve(image_url,  imgName)
+
+def makeImages(prompt, name, num):
+    openModel = openAiModel()
+    response = openModel.images.generate(
+        model="dall-e-2",
+        prompt=prompt,
+        size="1024x1024",
+        n=num,
+    )
+    for n,data in enumerate(response.data):
+        print(n)
+        print(data.url)
+        imgname = f"img/{name.split('.')[0]}_{n}.png"
+        urllib.request.urlretrieve(data.url, imgname)
+
+def cloneImage(imgName, num):
+    openModel = openAiModel()
+    response = openModel.images.create_variation(
+        model="dall-e-2",
+        image=open("img/"+imgName, "rb"),
+        n=num,
+        size="1024x1024"
+    )
+    for n,data in enumerate(response.data):
+        print(n)
+        print(data.url)
+        name = f"img/{imgName.split('.')[0]}_clone_{n}.png"
+        urllib.request.urlretrieve(data.url, name)
